@@ -6,6 +6,82 @@ using UnityEngine.Events;
 
 namespace ScreenSystem.Scripts.Control
 {
+    // Sound set up
+    public partial class ScreenSystem
+    {
+        private void PlaySound(AudioClip clip)
+        {
+            _source.PlayOneShot(clip);
+        }
+        
+        // TODO: Change some getting screen sound
+        private AudioClip GetScreenShowClip(Screen screen)
+        {
+            if (screen.OnShowClip != null)
+                return screen.OnShowClip;
+
+            var screenType = screen.ScreenType;
+
+            return soundsScreens.Any(x => x.Type == screenType)
+                ? soundsScreens.ToList().Find(x => x.Type == screenType).ShowClip
+                : defaultShowClip;
+        }
+
+        private AudioClip GetScreenHideClip(Screen screen)
+        {
+            if (screen.OnHideClip != null)
+                return screen.OnHideClip;
+
+            var screenType = screen.ScreenType;
+
+            return soundsScreens.Any(x => x.Type == screenType)
+                ? soundsScreens.ToList().Find(x => x.Type == screenType).HideClip
+                : defaultHideClip;
+        }
+        
+        [Serializable]
+        private struct SoundsScreen
+        {
+            [SerializeField] private ScreenType type;
+
+            [SerializeField] private AudioClip showClip;
+
+            [SerializeField] private AudioClip hideClip;
+
+            public ScreenType Type => type;
+
+            public AudioClip ShowClip => showClip;
+
+            public AudioClip HideClip => hideClip;
+        }
+    }
+    
+    // Events set
+    public partial class ScreenSystem
+    {
+        private void LogEvent()
+        {
+            OnSomeWindowShow += delegate(Screen screen)
+            {
+                if (_settings.IsDebug)
+                    print(screen.name + " shown");
+            };
+
+            OnSomeWindowHide += delegate(Screen screen)
+            {
+                if (_settings.IsDebug)
+                    print(screen.name + " hidden");
+            };
+        }
+
+        private void SoundEvent()
+        {
+            OnSomeWindowHide += delegate(Screen screen) { PlaySound(GetScreenShowClip(screen)); };
+
+            OnSomeWindowHide += delegate(Screen screen) { PlaySound(GetScreenHideClip(screen)); };
+        }
+    }
+    
     // Edit some public methods
     public partial class ScreenSystem
     {
@@ -32,6 +108,7 @@ namespace ScreenSystem.Scripts.Control
         }
     }
 
+    [RequireComponent(typeof(ScreenData))]
     [RequireComponent(typeof(AudioSource))]
     // Main control
     public partial class ScreenSystem : Singleton<ScreenSystem>
@@ -40,11 +117,13 @@ namespace ScreenSystem.Scripts.Control
 
         [SerializeField] private SoundsScreen[] soundsScreens;
 
-        [SerializeField] private AudioClip defaultOpenClip;
+        [SerializeField] private AudioClip defaultShowClip;
 
         [SerializeField] private AudioClip defaultHideClip;
 
         private AudioSource _source;
+
+        private ScreenSystemSettings _settings;
 
         public UnityAction<Screen> OnSomeWindowShow { get; set; }
 
@@ -53,7 +132,7 @@ namespace ScreenSystem.Scripts.Control
         [ContextMenu("Init all screens")]
         private void InitAllScreens()
         {
-            var allChildren = transform.GetAllChildren();
+            var allChildren = transform.GetAllChildren().Where(x => x.GetComponent<Screen>());
 
             allScreens = allChildren.ToList().Select(x => x.GetComponent<Screen>()).ToArray();
 
@@ -67,61 +146,15 @@ namespace ScreenSystem.Scripts.Control
             });
         }
 
-        private void PlaySound(AudioClip clip)
-        {
-            _source.PlayOneShot(clip);
-        }
-        
-        private void LogEvent()
-        {
-            OnSomeWindowShow += delegate(Screen screen) { print(screen.name + " shown"); };
-
-            OnSomeWindowHide += delegate(Screen screen) { print(screen.name + " shown"); };
-        }
-
-        private void SoundEvent()
-        {
-            OnSomeWindowHide += delegate(Screen screen)
-            {
-                PlaySound(GetScreenShowClip(screen));
-            };
-            
-            OnSomeWindowHide += delegate(Screen screen)
-            {
-                PlaySound(GetScreenHideClip(screen));
-            };
-        }
-
         private void CheckStartOpen()
         {
             var toStartOpen = allScreens.Where(x => x.IsShowOnStart);
 
+            var toHideOther = allScreens.Where(x => x.IsActive && !x.IsShowOnStart);
+            
             toStartOpen.ToList().ForEach(x => x.Show());
-        }
-
-        // TODO: Change some getting screen sound
-        private AudioClip GetScreenShowClip(Screen screen)
-        {
-            if (screen.OnShowClip != null)
-                return screen.OnShowClip;
-
-            var screenType = screen.ScreenType;
-
-            return soundsScreens.Any(x => x.Type == screenType)
-                ? soundsScreens.ToList().Find(x => x.Type == screenType).ShowClip
-                : null;
-        }
-        
-        private AudioClip GetScreenHideClip(Screen screen)
-        {
-            if (screen.OnHideClip != null)
-                return screen.OnHideClip;
-
-            var screenType = screen.ScreenType;
-
-            return soundsScreens.Any(x => x.Type == screenType)
-                ? soundsScreens.ToList().Find(x => x.Type == screenType).HideClip
-                : null;
+            
+            toHideOther.ToList().ForEach(x => x.Hide());
         }
         
         protected override void Awake()
@@ -130,8 +163,10 @@ namespace ScreenSystem.Scripts.Control
 
             _source = GetComponent<AudioSource>();
 
+            _settings = ScreenData.Instance.ScreenSettings;
+
             LogEvent();
-            
+
             SoundEvent();
 
             InitAllScreens();
@@ -140,22 +175,6 @@ namespace ScreenSystem.Scripts.Control
         private void Start()
         {
             CheckStartOpen();
-        }
-
-        [Serializable]
-        public struct SoundsScreen
-        {
-            [SerializeField] private ScreenType type;
-
-            [SerializeField] private AudioClip showClip;
-
-            [SerializeField] private AudioClip hideClip;
-
-            public ScreenType Type => type;
-
-            public AudioClip ShowClip => showClip;
-
-            public AudioClip HideClip => hideClip;
         }
     }
 }

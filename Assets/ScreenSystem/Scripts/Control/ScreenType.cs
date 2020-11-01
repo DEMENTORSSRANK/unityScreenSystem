@@ -6,7 +6,6 @@
     public enum ScreenType
     {
         Window,
-        Popup,
-        Message
+        Popup
     }
 }

@@ -14,7 +14,21 @@ namespace ScreenSystem.Scripts.Control
     
     public class Singleton<T> : MonoBehaviour where T : MonoBehaviour
     {
-        public static T Instance { get; protected set; }
+        private static T _instance;
+		
+        public static T Instance 
+        { 
+            get 
+            { 
+                if (_instance == null)
+                    _instance = FindObjectOfType<T>();
+				
+				
+                return _instance;	
+            }
+			
+            set => _instance = value;
+        }
 
         protected virtual void Awake()
         {

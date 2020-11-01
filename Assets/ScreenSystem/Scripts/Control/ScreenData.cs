@@ -3,12 +3,14 @@ using UnityEngine;
 
 namespace ScreenSystem.Scripts.Control
 {
-    public class ScreenData : MonoBehaviour
+    public class ScreenData : Singleton<ScreenData>
     {
         public ScreenSystemSettings ScreenSettings { get; set; }
 
-        private void Awake()
+        protected override void Awake()
         {
+            base.Awake();
+            
             ScreenSettings = Resources.Load<ScreenSystemSettings>("Settings");
         }
     }

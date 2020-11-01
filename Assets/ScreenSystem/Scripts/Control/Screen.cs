@@ -63,28 +63,36 @@ namespace ScreenSystem.Scripts.Control
 
         public void Show(bool hideOthers = false)
         {
-            gameObject.SetActive(true);
+            if (IsActive)
+                return;
             
+            if (hideOthers)
+                ParentSystem.HideAllScreens();
+            
+            OnShow();
+
             OnShowed?.Invoke(this);
             
             OnShowEvent?.Invoke(this);
-
-            OnShow();
             
-            if (hideOthers)
-                hideWhenShow.ToList().ForEach(x => x.Hide());
+            gameObject.SetActive(true);
+            
+            hideWhenShow.ToList().ForEach(x => x.Hide());
         }
 
         [ContextMenu("Hide")]
         public void Hide()
         {
-            gameObject.SetActive(false);
+            if (!IsActive)
+                return;
             
+            OnHide();
+
             OnHidden?.Invoke(this);
             
             OnHideEvent?.Invoke(this);
-
-            OnHide();
+            
+            gameObject.SetActive(false);
         }
 
         [ContextMenu("Show")]
