@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using ScreenSystem.Scripts.Screens;
 using UnityEngine;
@@ -11,6 +12,9 @@ namespace ScreenSystem.Scripts.Control
     {
         private void PlaySound(AudioClip clip)
         {
+            if (clip == null)
+                return;
+            
             _source.PlayOneShot(clip);
         }
         
@@ -125,9 +129,23 @@ namespace ScreenSystem.Scripts.Control
 
         private ScreenSystemSettings _settings;
 
+        public AudioClip DefaultShowClip
+        {
+            get => defaultShowClip;
+            set => defaultShowClip = value;
+        }
+
+        public AudioClip DefaultHideClip
+        {
+            get => defaultHideClip;
+            set => defaultHideClip = value;
+        }
+
         public UnityAction<Screen> OnSomeWindowShow { get; set; }
 
         public UnityAction<Screen> OnSomeWindowHide { get; set; }
+
+        public IEnumerable<Screen> AllScreens => allScreens;
 
         [ContextMenu("Init all screens")]
         private void InitAllScreens()
@@ -140,9 +158,9 @@ namespace ScreenSystem.Scripts.Control
 
             allScreens.ToList().ForEach(x =>
             {
-                x.OnShowEvent.AddListener(OnSomeWindowShow);
+                x.OnShowEvent?.AddListener(OnSomeWindowShow);
 
-                x.OnHideEvent.AddListener(OnSomeWindowHide);
+                x.OnHideEvent?.AddListener(OnSomeWindowHide);
             });
         }
 
@@ -156,14 +174,20 @@ namespace ScreenSystem.Scripts.Control
             
             toHideOther.ToList().ForEach(x => x.Hide());
         }
-        
+
+        private void OnDrawGizmosSelected()
+        {
+            if (!Application.isEditor)
+                return;
+
+            InitAllScreens();
+        }
+
         protected override void Awake()
         {
             base.Awake();
 
             _source = GetComponent<AudioSource>();
-
-            _settings = ScreenData.Instance.ScreenSettings;
 
             LogEvent();
 
@@ -174,6 +198,8 @@ namespace ScreenSystem.Scripts.Control
 
         private void Start()
         {
+            _settings = ScreenData.Instance.ScreenSettings;
+            
             CheckStartOpen();
         }
     }

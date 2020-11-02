@@ -56,9 +56,12 @@ namespace ScreenSystem.Scripts.Control
         
         public void SetSystem(ScreenSystem system)
         {
+            if (ParentSystem == system)
+                return;
+            
             ParentSystem = system;
             
-            transform.parent = system.transform;
+            transform.SetParent(system.transform);
         }
 
         public void Show(bool hideOthers = false)

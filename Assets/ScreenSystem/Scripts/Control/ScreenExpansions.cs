@@ -10,6 +10,20 @@ namespace ScreenSystem.Scripts.Control
         {
             return parent.GetComponentsInChildren<Transform>(parent).Where(x => x != parent);
         }
+
+        public static Transform[] GetAllChildren(this GameObject[] pool)
+        {
+            var returnList = new List<Transform>();
+
+            returnList.AddRange(pool.Select(x => x.transform));
+            
+            foreach (var p in pool)
+            {
+                returnList.AddRange(p.transform.GetAllChildren());
+            }
+
+            return returnList.ToArray();
+        }
     }
     
     public class Singleton<T> : MonoBehaviour where T : MonoBehaviour
