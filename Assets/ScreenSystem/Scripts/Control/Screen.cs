@@ -8,9 +8,11 @@ namespace ScreenSystem.Scripts.Control
     {
         [Header("General")]
         
-        [SerializeField] private ScreenType screenType;
-
         [SerializeField] private bool isShowOnStart;
+
+        [SerializeField] private bool changeChildIndex = true;
+        
+        [SerializeField] private ScreenType screenType;
 
         [SerializeField] private Screen[] hideWhenShow;
 
@@ -43,7 +45,9 @@ namespace ScreenSystem.Scripts.Control
         public UnityAction<Screen> OnHidden { get; set; }
 
         public bool IsShowOnStart => isShowOnStart;
-        
+
+        public bool ChangeChildIndex => changeChildIndex;
+
         public bool IsActive => gameObject.activeSelf;
 
         public ScreenType ScreenType => screenType;
@@ -52,7 +56,7 @@ namespace ScreenSystem.Scripts.Control
 
         public AudioClip OnHideClip => onHideClip;
 
-        private ScreenSystem ParentSystem { get; set; }
+        protected ScreenSystem ParentSystem { get; set; }
         
         public void SetSystem(ScreenSystem system)
         {
@@ -81,6 +85,9 @@ namespace ScreenSystem.Scripts.Control
             gameObject.SetActive(true);
             
             hideWhenShow.ToList().ForEach(x => x.Hide());
+            
+            if (ChangeChildIndex)
+                SetToLastChild();
         }
 
         [ContextMenu("Hide")]
@@ -97,11 +104,21 @@ namespace ScreenSystem.Scripts.Control
             
             gameObject.SetActive(false);
         }
-
+        
         [ContextMenu("Show")]
         private void ContextShow()
         {
             Show();
+        }
+
+        private void SetToLastChild()
+        {
+            var parent = transform.parent;
+            
+            if (parent == null)
+                return;
+            
+            transform.SetSiblingIndex(parent.childCount - 1);
         }
 
         protected virtual void OnShow()

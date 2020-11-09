@@ -41,46 +41,46 @@ namespace ScreenSystem.Scripts.Editor
 
             var allObjects = activeScene.GetRootGameObjects();
 
-            if (GUILayout.Button("Create screen system"))
+            if (!GUILayout.Button("Create screen system"))
+                return;
+            
+            var isAnyScreenSystemOnScene =
+                allObjects.GetAllChildren().Any(x => x.GetComponent<Control.ScreenSystem>());
+
+            if (isAnyScreenSystemOnScene)
             {
-                var isAnyScreenSystemOnScene =
-                    allObjects.GetAllChildren().Any(x => x.GetComponent<Control.ScreenSystem>());
+                Debug.Log("Any have");
 
-                if (isAnyScreenSystemOnScene)
-                {
-                    Debug.Log("Any have");
-
-                    return;
-                }
-
-                var createdObject = new GameObject("UI");
-
-                var canvas = createdObject.AddComponent<Canvas>();
-
-                var canvasScaler = createdObject.AddComponent<CanvasScaler>();
-
-                var graphicRayCaster = createdObject.AddComponent<GraphicRaycaster>();
-
-                var screenSystem = createdObject.AddComponent<Control.ScreenSystem>();
-
-                canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-
-                var resX = _defaultView.x;
-
-                var resY = _defaultView.y;
-
-                var rightResolution = _orientation == ScreenOrientation.Landspace
-                    ? new Vector2(resX, resY)
-                    : new Vector2(resY, resX);
-
-                canvasScaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-
-                canvasScaler.referenceResolution = rightResolution;
-
-                canvasScaler.matchWidthOrHeight = .5f;
-
-                Selection.activeGameObject = createdObject;
+                return;
             }
+
+            var createdObject = new GameObject("UI");
+
+            var canvas = createdObject.AddComponent<Canvas>();
+
+            var canvasScaler = createdObject.AddComponent<CanvasScaler>();
+
+            var graphicRayCaster = createdObject.AddComponent<GraphicRaycaster>();
+
+            var screenSystem = createdObject.AddComponent<Control.ScreenSystem>();
+
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+
+            var resX = _defaultView.x;
+
+            var resY = _defaultView.y;
+
+            var rightResolution = _orientation == ScreenOrientation.Landspace
+                ? new Vector2(resX, resY)
+                : new Vector2(resY, resX);
+
+            canvasScaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+
+            canvasScaler.referenceResolution = rightResolution;
+
+            canvasScaler.matchWidthOrHeight = .5f;
+
+            Selection.activeGameObject = createdObject;
         }
 
         private enum ScreenOrientation

@@ -2,6 +2,7 @@
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.UI;
 using Screen = ScreenSystem.Scripts.Control.Screen;
 
 namespace ScreenSystem.Scripts.Editor
@@ -14,6 +15,8 @@ namespace ScreenSystem.Scripts.Editor
         public override void OnInspectorGUI()
         {
             var system = (Control.ScreenSystem) target;
+
+            var canvasScaler = system.GetComponent<CanvasScaler>();
 
             #region Create new screen
 
@@ -31,9 +34,19 @@ namespace ScreenSystem.Scripts.Editor
 
                     return;
                 }
-
-
+                
                 var newScreen = new GameObject();
+
+                var rectTransform = newScreen.AddComponent<RectTransform>();
+                
+                // Set anchors to full screen
+                rectTransform.anchorMin = Vector2.zero;
+                
+                rectTransform.anchorMax = Vector2.one;
+                
+                rectTransform.offsetMax = canvasScaler.referenceResolution;
+                
+                rectTransform.offsetMin = Vector2.zero;
 
                 newScreen.transform.SetParent(system.transform);
 
