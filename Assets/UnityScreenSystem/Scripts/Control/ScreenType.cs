@@ -1,4 +1,4 @@
-﻿namespace ScreenSystem.Scripts.Control
+﻿namespace UnityScreenSystem.Scripts.Control
 {
     /// <summary>
     /// Can be changed (warning! cant be null, for example, leave, at least, window)

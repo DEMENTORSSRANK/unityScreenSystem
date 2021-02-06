@@ -1,13 +1,13 @@
-﻿using System.Collections.Generic;
+﻿﻿using System.Collections.Generic;
 using System.Linq;
-using ScreenSystem.Scripts.Control;
+using UnityScreenSystem.Scripts.Control;
 using UnityEditor;
 using UnityEngine;
 using UnityEditor.SceneManagement;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-namespace ScreenSystem.Scripts.Editor
+namespace UnityScreenSystem.Scripts.Editor
 {
     public class ScreenSystemWindow : EditorWindow
     {
@@ -78,7 +78,7 @@ namespace ScreenSystem.Scripts.Editor
 
             canvasScaler.referenceResolution = rightResolution;
 
-            canvasScaler.matchWidthOrHeight = .5f;
+            canvasScaler.matchWidthOrHeight = _orientation == ScreenOrientation.Landspace ? 0 : 1;
 
             Selection.activeGameObject = createdObject;
         }

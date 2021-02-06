@@ -1,48 +1,46 @@
-﻿using System.Linq;
+﻿﻿using System;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.UI;
 
-namespace ScreenSystem.Scripts.Control
+namespace UnityScreenSystem.Scripts.Control
 {
-    public abstract class Screen : MonoBehaviour
+    public abstract class GameScreen : MonoBehaviour
     {
-        [Header("General")]
-        
-        [SerializeField] private bool isShowOnStart;
+        [Header("General")] [SerializeField] private bool isShowOnStart = false;
 
         [SerializeField] private bool changeChildIndex = true;
-        
-        [SerializeField] private ScreenType screenType;
 
-        [SerializeField] private Screen[] hideWhenShow;
+        [SerializeField] private ScreenType screenType = ScreenType.Window;
 
-        [Header("Audio")]
-        
-        [SerializeField] private AudioClip onShowClip;
+        [SerializeField] private GameScreen[] hideWhenShow;
+
+        [Header("Audio")] [SerializeField] private AudioClip onShowClip;
 
         [SerializeField] private AudioClip onHideClip;
 
-        [Header("Events")]
-        
-        [SerializeField] private UnityEvent<Screen> onShowEvent;
+        [Header("Default")] [SerializeField] private Button[] backButtons;
 
-        [SerializeField] private UnityEvent<Screen> onHideEvent;
+        [Header("Events")] [SerializeField] private UnityEvent<GameScreen> onShowEvent;
 
-        public UnityEvent<Screen> OnShowEvent
+        [SerializeField] private UnityEvent<GameScreen> onHideEvent;
+
+        public UnityEvent<GameScreen> OnShowEvent
         {
             get => onShowEvent;
             set => onShowEvent = value;
         }
 
-        public UnityEvent<Screen> OnHideEvent
+        public UnityEvent<GameScreen> OnHideEvent
         {
             get => onHideEvent;
             set => onHideEvent = value;
         }
 
-        public UnityAction<Screen> OnShowed { get; set; }
+        public UnityAction<GameScreen> OnShowed { get; set; }
 
-        public UnityAction<Screen> OnHidden { get; set; }
+        public UnityAction<GameScreen> OnHidden { get; set; }
 
         public bool IsShowOnStart => isShowOnStart;
 
@@ -57,14 +55,14 @@ namespace ScreenSystem.Scripts.Control
         public AudioClip OnHideClip => onHideClip;
 
         protected ScreenSystem ParentSystem { get; set; }
-        
+
         public void SetSystem(ScreenSystem system)
         {
             if (ParentSystem == system)
                 return;
-            
+
             ParentSystem = system;
-            
+
             transform.SetParent(system.transform);
         }
 
@@ -72,20 +70,20 @@ namespace ScreenSystem.Scripts.Control
         {
             if (IsActive)
                 return;
-            
+
             if (hideOthers)
                 ParentSystem.HideAllScreens();
-            
+
             OnShow();
 
             OnShowed?.Invoke(this);
-            
+
             OnShowEvent?.Invoke(this);
-            
+
             gameObject.SetActive(true);
-            
+
             hideWhenShow.ToList().ForEach(x => x.Hide());
-            
+
             if (ChangeChildIndex)
                 SetToLastChild();
         }
@@ -95,16 +93,16 @@ namespace ScreenSystem.Scripts.Control
         {
             if (!IsActive)
                 return;
-            
+
             OnHide();
 
             OnHidden?.Invoke(this);
-            
+
             OnHideEvent?.Invoke(this);
-            
+
             gameObject.SetActive(false);
         }
-        
+
         [ContextMenu("Show")]
         private void ContextShow()
         {
@@ -114,21 +112,32 @@ namespace ScreenSystem.Scripts.Control
         private void SetToLastChild()
         {
             var parent = transform.parent;
-            
+
             if (parent == null)
                 return;
-            
+
             transform.SetSiblingIndex(parent.childCount - 1);
+        }
+
+        private void InitBackButtons()
+        {
+            if (backButtons.Length <= 0)
+                return;
+            
+            backButtons.ToList().ForEach(x => x.onClick.AddListener(Hide));
+        }
+
+        protected virtual void OnEnable()
+        {
+            InitBackButtons();
         }
 
         protected virtual void OnShow()
         {
-            
         }
 
         protected virtual void OnHide()
         {
-            
         }
     }
 }

@@ -1,11 +1,10 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using ScreenSystem.Scripts.Screens;
 using UnityEngine;
 using UnityEngine.Events;
 
-namespace ScreenSystem.Scripts.Control
+namespace UnityScreenSystem.Scripts.Control
 {
     // Sound set up
     public partial class ScreenSystem
@@ -19,24 +18,24 @@ namespace ScreenSystem.Scripts.Control
         }
         
         // TODO: Change some getting screen sound
-        private AudioClip GetScreenShowClip(Screen screen)
+        private AudioClip GetScreenShowClip(GameScreen gameScreen)
         {
-            if (screen.OnShowClip != null)
-                return screen.OnShowClip;
+            if (gameScreen.OnShowClip != null)
+                return gameScreen.OnShowClip;
 
-            var screenType = screen.ScreenType;
+            var screenType = gameScreen.ScreenType;
 
             return soundsScreens.Any(x => x.Type == screenType)
                 ? soundsScreens.ToList().Find(x => x.Type == screenType).ShowClip
                 : defaultShowClip;
         }
 
-        private AudioClip GetScreenHideClip(Screen screen)
+        private AudioClip GetScreenHideClip(GameScreen gameScreen)
         {
-            if (screen.OnHideClip != null)
-                return screen.OnHideClip;
+            if (gameScreen.OnHideClip != null)
+                return gameScreen.OnHideClip;
 
-            var screenType = screen.ScreenType;
+            var screenType = gameScreen.ScreenType;
 
             return soundsScreens.Any(x => x.Type == screenType)
                 ? soundsScreens.ToList().Find(x => x.Type == screenType).HideClip
@@ -65,13 +64,13 @@ namespace ScreenSystem.Scripts.Control
     {
         private void LogEvent()
         {
-            OnSomeWindowShow += delegate(Screen screen)
+            OnSomeWindowShow += delegate(GameScreen screen)
             {
                 if (_settings.IsDebug)
                     print(screen.name + " shown");
             };
 
-            OnSomeWindowHide += delegate(Screen screen)
+            OnSomeWindowHide += delegate(GameScreen screen)
             {
                 if (_settings.IsDebug)
                     print(screen.name + " hidden");
@@ -80,20 +79,20 @@ namespace ScreenSystem.Scripts.Control
 
         private void SoundEvent()
         {
-            OnSomeWindowHide += delegate(Screen screen) { PlaySound(GetScreenShowClip(screen)); };
+            OnSomeWindowHide += delegate(GameScreen screen) { PlaySound(GetScreenShowClip(screen)); };
 
-            OnSomeWindowHide += delegate(Screen screen) { PlaySound(GetScreenHideClip(screen)); };
+            OnSomeWindowHide += delegate(GameScreen screen) { PlaySound(GetScreenHideClip(screen)); };
         }
     }
     
     // Edit some public methods
     public partial class ScreenSystem
     {
-        public Screen GetScreen<T>() where T : Screen
+        public T FindScreen<T>() where T : GameScreen
         {
             var foundScreen = allScreens.ToList().Find(x => x.GetType() == typeof(T));
 
-            return foundScreen;
+            return (T) foundScreen;
         }
 
         public void HideAllScreens()
@@ -101,14 +100,18 @@ namespace ScreenSystem.Scripts.Control
             allScreens.ToList().ForEach(x => x.Hide());
         }
 
-        public void ShowScreen<T>(bool isHideOther = false) where T : Screen
+        public T ShowScreen<T>(bool isHideOther = false) where T : GameScreen
         {
-            GetScreen<T>().Show(isHideOther);
+            var screen = FindScreen<T>();
+            
+            screen.Show();
+
+            return screen;
         }
 
-        public void HideScreen<T>() where T : Screen
+        public void HideScreen<T>() where T : GameScreen
         {
-            GetScreen<T>().Hide();
+            FindScreen<T>().Hide();
         }
     }
 
@@ -117,7 +120,7 @@ namespace ScreenSystem.Scripts.Control
     // Main control
     public partial class ScreenSystem : Singleton<ScreenSystem>
     {
-        [SerializeField] private Screen[] allScreens;
+        [SerializeField] private GameScreen[] allScreens;
 
         [SerializeField] private SoundsScreen[] soundsScreens;
 
@@ -141,18 +144,18 @@ namespace ScreenSystem.Scripts.Control
             set => defaultHideClip = value;
         }
 
-        public UnityAction<Screen> OnSomeWindowShow { get; set; }
+        public UnityAction<GameScreen> OnSomeWindowShow { get; set; }
 
-        public UnityAction<Screen> OnSomeWindowHide { get; set; }
+        public UnityAction<GameScreen> OnSomeWindowHide { get; set; }
 
-        public IEnumerable<Screen> AllScreens => allScreens;
+        public IEnumerable<GameScreen> AllScreens => allScreens;
 
         [ContextMenu("Init all screens")]
         private void InitAllScreens()
         {
-            var allChildren = transform.GetAllChildren().Where(x => x.GetComponent<Screen>());
+            var allChildren = transform.GetAllChildren().Where(x => x.GetComponent<GameScreen>());
 
-            allScreens = allChildren.ToList().Select(x => x.GetComponent<Screen>()).ToArray();
+            allScreens = allChildren.ToList().Select(x => x.GetComponent<GameScreen>()).ToArray();
 
             allScreens.ToList().ForEach(x => x.SetSystem(this));
 
