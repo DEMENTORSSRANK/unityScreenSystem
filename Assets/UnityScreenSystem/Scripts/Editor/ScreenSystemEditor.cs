@@ -38,16 +38,20 @@ namespace UnityScreenSystem.Scripts.Editor
 
                 var rectTransform = newScreen.AddComponent<RectTransform>();
 
+                newScreen.transform.SetParent(system.transform);    
+                
                 // Set anchors to full screen
                 rectTransform.anchorMin = Vector2.zero;
 
                 rectTransform.anchorMax = Vector2.one;
-
-                rectTransform.offsetMax = canvasScaler.referenceResolution;
-
+                        
+                rectTransform.offsetMax = Vector2.zero;
+                        
                 rectTransform.offsetMin = Vector2.zero;
-
-                newScreen.transform.SetParent(system.transform);
+                        
+                rectTransform.localScale = Vector3.one;
+                
+                rectTransform.localPosition = Vector3.zero;
 
                 newScreen.AddComponent(toCreateClass);
 

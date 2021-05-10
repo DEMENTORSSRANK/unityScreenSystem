@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -13,10 +13,10 @@ namespace UnityScreenSystem.Scripts.Control
         {
             if (clip == null)
                 return;
-            
+
             _source.PlayOneShot(clip);
         }
-        
+
         // TODO: Change some getting screen sound
         private AudioClip GetScreenShowClip(GameScreen gameScreen)
         {
@@ -25,9 +25,9 @@ namespace UnityScreenSystem.Scripts.Control
 
             var screenType = gameScreen.ScreenType;
 
-            return soundsScreens.Any(x => x.Type == screenType)
-                ? soundsScreens.ToList().Find(x => x.Type == screenType).ShowClip
-                : defaultShowClip;
+            return _soundsScreens.Any(x => x.Type == screenType)
+                ? _soundsScreens.ToList().Find(x => x.Type == screenType).ShowClip
+                : _defaultShowClip;
         }
 
         private AudioClip GetScreenHideClip(GameScreen gameScreen)
@@ -37,11 +37,11 @@ namespace UnityScreenSystem.Scripts.Control
 
             var screenType = gameScreen.ScreenType;
 
-            return soundsScreens.Any(x => x.Type == screenType)
-                ? soundsScreens.ToList().Find(x => x.Type == screenType).HideClip
-                : defaultHideClip;
+            return _soundsScreens.Any(x => x.Type == screenType)
+                ? _soundsScreens.ToList().Find(x => x.Type == screenType).HideClip
+                : _defaultHideClip;
         }
-        
+
         [Serializable]
         private struct SoundsScreen
         {
@@ -58,7 +58,7 @@ namespace UnityScreenSystem.Scripts.Control
             public AudioClip HideClip => hideClip;
         }
     }
-    
+
     // Events set
     public partial class ScreenSystem
     {
@@ -84,26 +84,33 @@ namespace UnityScreenSystem.Scripts.Control
             OnSomeWindowHide += delegate(GameScreen screen) { PlaySound(GetScreenHideClip(screen)); };
         }
     }
-    
+
     // Edit some public methods
     public partial class ScreenSystem
     {
         public T FindScreen<T>() where T : GameScreen
         {
-            var foundScreen = allScreens.ToList().Find(x => x.GetType() == typeof(T));
+            var type = typeof(T);
+
+            if (_allScreens.ToList().All(x => x.GetType() != type))
+            {
+                throw new Exception($"Screen \"{type.Name}\" cant be found");
+            }
+
+            var foundScreen = _allScreens.ToList().Find(x => x.GetType() == type);
 
             return (T) foundScreen;
         }
 
         public void HideAllScreens()
         {
-            allScreens.ToList().ForEach(x => x.Hide());
+            _allScreens.ToList().ForEach(x => x.Hide());
         }
 
         public T ShowScreen<T>(bool isHideOther = false) where T : GameScreen
         {
             var screen = FindScreen<T>();
-            
+
             screen.Show();
 
             return screen;
@@ -117,49 +124,54 @@ namespace UnityScreenSystem.Scripts.Control
 
     [RequireComponent(typeof(ScreenData))]
     [RequireComponent(typeof(AudioSource))]
+    [RequireComponent(typeof(Canvas))]
     // Main control
     public partial class ScreenSystem : Singleton<ScreenSystem>
     {
-        [SerializeField] private GameScreen[] allScreens;
+        [SerializeField] private GameScreen[] _allScreens;
 
-        [SerializeField] private SoundsScreen[] soundsScreens;
+        [SerializeField] private SoundsScreen[] _soundsScreens;
 
-        [SerializeField] private AudioClip defaultShowClip;
+        [SerializeField] private AudioClip _defaultShowClip;
 
-        [SerializeField] private AudioClip defaultHideClip;
+        [SerializeField] private AudioClip _defaultHideClip;
 
         private AudioSource _source;
 
         private ScreenSystemSettings _settings;
 
+        private Canvas _canvas;
+
         public AudioClip DefaultShowClip
         {
-            get => defaultShowClip;
-            set => defaultShowClip = value;
+            get => _defaultShowClip;
+            set => _defaultShowClip = value;
         }
 
         public AudioClip DefaultHideClip
         {
-            get => defaultHideClip;
-            set => defaultHideClip = value;
+            get => _defaultHideClip;
+            set => _defaultHideClip = value;
         }
 
         public UnityAction<GameScreen> OnSomeWindowShow { get; set; }
 
         public UnityAction<GameScreen> OnSomeWindowHide { get; set; }
 
-        public IEnumerable<GameScreen> AllScreens => allScreens;
+        public IEnumerable<GameScreen> AllScreens => _allScreens;
+
+        public RenderMode RenderMode => _canvas == null ? GetComponent<Canvas>().renderMode : _canvas.renderMode;
 
         [ContextMenu("Init all screens")]
         private void InitAllScreens()
         {
             var allChildren = transform.GetAllChildren().Where(x => x.GetComponent<GameScreen>());
 
-            allScreens = allChildren.ToList().Select(x => x.GetComponent<GameScreen>()).ToArray();
+            _allScreens = allChildren.ToList().Select(x => x.GetComponent<GameScreen>()).ToArray();
 
-            allScreens.ToList().ForEach(x => x.SetSystem(this));
+            _allScreens.ToList().ForEach(x => x.SetSystem(this));
 
-            allScreens.ToList().ForEach(x =>
+            _allScreens.ToList().ForEach(x =>
             {
                 x.OnShowEvent?.AddListener(OnSomeWindowShow);
 
@@ -169,13 +181,20 @@ namespace UnityScreenSystem.Scripts.Control
 
         private void CheckStartOpen()
         {
-            var toStartOpen = allScreens.Where(x => x.IsShowOnStart);
+            var toStartOpen = _allScreens.Where(x => x.IsShowOnStart);
 
-            var toHideOther = allScreens.Where(x => x.IsActive && !x.IsShowOnStart);
-            
+            var toHideOther = _allScreens.Where(x => x.IsActive && !x.IsShowOnStart);
+
             toStartOpen.ToList().ForEach(x => x.Show());
-            
+
             toHideOther.ToList().ForEach(x => x.Hide());
+        }
+
+        private void InitComponents()
+        {
+            _source = GetComponent<AudioSource>();
+
+            _canvas = GetComponent<Canvas>();
         }
 
         private void OnDrawGizmosSelected()
@@ -190,7 +209,7 @@ namespace UnityScreenSystem.Scripts.Control
         {
             base.Awake();
 
-            _source = GetComponent<AudioSource>();
+            InitComponents();
 
             LogEvent();
 
@@ -202,7 +221,7 @@ namespace UnityScreenSystem.Scripts.Control
         private void Start()
         {
             _settings = ScreenData.Instance.ScreenSettings;
-            
+
             CheckStartOpen();
         }
     }

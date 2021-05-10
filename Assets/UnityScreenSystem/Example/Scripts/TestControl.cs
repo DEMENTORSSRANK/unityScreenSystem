@@ -1,14 +1,15 @@
 ﻿using System;
 using UnityEngine;
+using UnityScreenSystem.Example.Scripts.Screens;
 using UnityScreenSystem.Scripts.Control;
 
 namespace UnityScreenSystem.Example.Scripts
 {
-    public class TestGameScreen : GameScreen
+    public class TestControl : MonoBehaviour
     {
         private void Start()
         {
-            var screen = ScreenSystem.Instance.FindScreen<TestGameScreen>();
+            ScreenSystem.Instance.ShowScreen<SecondTestGameScreen>();
         }
     }
 }

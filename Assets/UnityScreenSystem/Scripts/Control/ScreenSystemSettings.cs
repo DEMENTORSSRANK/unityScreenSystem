@@ -4,8 +4,8 @@ namespace UnityScreenSystem.Scripts.Control
 {
     public class ScreenSystemSettings : ScriptableObject
     {
-        [SerializeField] private bool isDebug = true;
+        [SerializeField] private bool _isDebug = true;
 
-        public bool IsDebug => isDebug;
+        public bool IsDebug => _isDebug;
     }
 }

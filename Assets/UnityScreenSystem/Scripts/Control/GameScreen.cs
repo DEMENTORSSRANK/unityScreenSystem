@@ -8,51 +8,51 @@ namespace UnityScreenSystem.Scripts.Control
 {
     public abstract class GameScreen : MonoBehaviour
     {
-        [Header("General")] [SerializeField] private bool isShowOnStart = false;
+        [Header("General")] [SerializeField] private bool _isShowOnStart;
 
-        [SerializeField] private bool changeChildIndex = true;
+        [SerializeField] private bool _changeChildIndex = true;
 
-        [SerializeField] private ScreenType screenType = ScreenType.Window;
+        [SerializeField] private ScreenType _screenType = ScreenType.Window;
 
-        [SerializeField] private GameScreen[] hideWhenShow;
+        [SerializeField] private GameScreen[] _hideWhenShow;
 
-        [Header("Audio")] [SerializeField] private AudioClip onShowClip;
+        [Header("Audio")] [SerializeField] private AudioClip _onShowClip;
 
-        [SerializeField] private AudioClip onHideClip;
+        [SerializeField] private AudioClip _onHideClip;
 
-        [Header("Default")] [SerializeField] private Button[] backButtons;
+        [Header("Default")] [SerializeField] private Button[] _backButtons;
 
-        [Header("Events")] [SerializeField] private UnityEvent<GameScreen> onShowEvent;
+        [Header("Events")] [SerializeField] private UnityEvent<GameScreen> _onShowEvent;
 
-        [SerializeField] private UnityEvent<GameScreen> onHideEvent;
+        [SerializeField] private UnityEvent<GameScreen> _onHideEvent;
 
         public UnityEvent<GameScreen> OnShowEvent
         {
-            get => onShowEvent;
-            set => onShowEvent = value;
+            get => _onShowEvent;
+            set => _onShowEvent = value;
         }
 
         public UnityEvent<GameScreen> OnHideEvent
         {
-            get => onHideEvent;
-            set => onHideEvent = value;
+            get => _onHideEvent;
+            set => _onHideEvent = value;
         }
 
         public UnityAction<GameScreen> OnShowed { get; set; }
 
         public UnityAction<GameScreen> OnHidden { get; set; }
 
-        public bool IsShowOnStart => isShowOnStart;
+        public bool IsShowOnStart => _isShowOnStart;
 
-        public bool ChangeChildIndex => changeChildIndex;
+        public bool ChangeChildIndex => _changeChildIndex;
 
         public bool IsActive => gameObject.activeSelf;
 
-        public ScreenType ScreenType => screenType;
+        public ScreenType ScreenType => _screenType;
 
-        public AudioClip OnShowClip => onShowClip;
+        public AudioClip OnShowClip => _onShowClip;
 
-        public AudioClip OnHideClip => onHideClip;
+        public AudioClip OnHideClip => _onHideClip;
 
         protected ScreenSystem ParentSystem { get; set; }
 
@@ -82,7 +82,7 @@ namespace UnityScreenSystem.Scripts.Control
 
             gameObject.SetActive(true);
 
-            hideWhenShow.ToList().ForEach(x => x.Hide());
+            _hideWhenShow.ToList().ForEach(x => x.Hide());
 
             if (ChangeChildIndex)
                 SetToLastChild();
@@ -121,10 +121,10 @@ namespace UnityScreenSystem.Scripts.Control
 
         private void InitBackButtons()
         {
-            if (backButtons.Length <= 0)
+            if (_backButtons.Length <= 0)
                 return;
             
-            backButtons.ToList().ForEach(x => x.onClick.AddListener(Hide));
+            _backButtons.ToList().ForEach(x => x.onClick.AddListener(Hide));
         }
 
         protected virtual void OnEnable()
